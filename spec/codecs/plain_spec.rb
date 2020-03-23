@@ -3,6 +3,15 @@ require "logstash/devutils/rspec/spec_helper"
 require "logstash/codecs/plain"
 require "logstash/event"
 require "insist"
+require 'base64'
+
+
+def read_raw_fixture(*path)
+  root = File.dirname(__FILE__)
+  fp = File.join root, 'fixtures', path
+  File.open fp, 'rb', &:read
+end
+
 
 describe LogStash::Codecs::Plain do
   context "#decode" do
@@ -99,6 +108,23 @@ describe LogStash::Codecs::Plain do
       event = LogStash::Event.new("hello" => "world", "something" => { "fancy" => 123 })
       codec.on_event do |event, data|
         insist { data } == event.sprintf(format)
+      end
+      codec.encode(event)
+    end
+  end
+
+  context "when input is a binary file", :mike do
+    it 'writes event using specified format' do
+      expected = read_raw_fixture('image001.png')
+      codec = LogStash::Codecs::Plain.new("format" => "%{[inner][message]}",
+                                         "use_legacy_sprintf" => true)
+      event = LogStash::Event.new
+      event.set("[inner][message]", Base64.decode64(expected))
+      # Handle Windows newline character
+      expected = expected.gsub(/\r/, "")
+
+      codec.on_event do |event, data|
+        insist { Base64.encode64(data) } == expected
       end
       codec.encode(event)
     end
