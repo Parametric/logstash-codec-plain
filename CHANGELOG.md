@@ -1,3 +1,6 @@
+## 3.1.0
+  - Add `use_legacy_sprintf` to use the legacy Ruby version of `event.sprintf`
+
 ## 3.0.6
   - Code cleanup. See https://github.com/logstash-plugins/logstash-codec-plain/pull/6
 
